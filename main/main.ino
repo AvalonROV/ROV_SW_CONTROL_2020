@@ -7,17 +7,17 @@
 
 // ACTUATORS
 #define ACT_1 2
-#define ACT_2 3
-#define ACT_3 4
-#define ACT_4 5
+#define ACT_2 5
+#define ACT_3 8
+#define ACT_4 9
 #define ACT_5 6
 #define ACT_6 7
 
 // THRUSTERS
 #define THRUST_1 10
-#define THRUST_2 9
-#define THRUST_3 9
-#define THRUST_4 9
+#define THRUST_2 11
+#define THRUST_3 12
+#define THRUST_4 13
 #define THRUST_5 9
 #define THRUST_6 9
 #define THRUST_7 9
@@ -31,15 +31,23 @@
 #define SENSOR_QUANTITY 3
 #define IDENTITY "AVALONROV"
 
-int actuatorList[ACTUATOR_QUANTITY] = {ACT_1, ACT_2, ACT_3, ACT_4, ACT_5, ACT_6};
-int thrusterList[THRUSTER_QUANTITY] = {THRUST_1, THRUST_2, THRUST_3, THRUST_4, THRUST_5, THRUST_6, THRUST_7, THRUST_8};
-Servo thrusters[THRUSTER_QUANTITY];
+const int actuatorList[ACTUATOR_QUANTITY] = {ACT_1, ACT_2, ACT_3, ACT_4, ACT_5, ACT_6};
+const int thrusterList[THRUSTER_QUANTITY] = {THRUST_1, THRUST_2, THRUST_3, THRUST_4, THRUST_5, THRUST_6, THRUST_7, THRUST_8};
+const Servo thrusters[THRUSTER_QUANTITY];
 
-void setup()
-{
+void setup() {
+  /*
+    PURPOSE
+    Initiates serial communication interface and sets ups actuators/thruster.
+
+    INPUT
+    None
+
+    RETURNS
+    None
+  */
   Serial.begin(BAUD_RATE);
   while (!Serial) {}
-  Serial.flush();
 
   // SETUP ACTUATORS PINS
   for (int i = 0; i < ACTUATOR_QUANTITY; i++) {
@@ -50,7 +58,7 @@ void setup()
   // SETUP THRUSTER PINS
   for (int i = 0; i < THRUSTER_QUANTITY; i++) {
     thrusters[i].attach(thrusterList[i]);
-    thrusters[i].writeMicroseconds(1000);
+    thrusters[i].writeMicroseconds(1500);
   }
 
   // INITIATE RANDOM NUMBER GENERATOR
@@ -58,6 +66,19 @@ void setup()
 }
 
 int charArrayToInt(const char *data, size_t start, size_t finish) {
+  /*
+    PURPOSE
+    Converts a specific region of a char array into an integer.
+    For example, it could return 56 from ['2','5','6','1'].
+
+    INPUT
+    const char *data = Pointer to the char array where the data is stored.
+    size_t start = The index of the first desired character in the array.
+    size_t finish = The index of the last desired character in the array.
+
+    RETURNS
+    val = The integer value from the char array
+  */
   int val = 0;
   while (start < finish) {
     val = val * 10 + data[start++] - '0';
@@ -66,6 +87,16 @@ int charArrayToInt(const char *data, size_t start, size_t finish) {
 }
 
 void armThrusters() {
+  /*
+    PURPOSE
+    Arms the thruster ESCs by outputting the servo signal for neutral speed.
+
+    INPUT
+    None
+
+    RETURNS
+    None
+  */
   for (int i = 0; i < THRUSTER_QUANTITY; i++) {
     thrusters[i].writeMicroseconds(1500);
   }
@@ -77,14 +108,14 @@ void setThrusters(int *thrusterSpeeds) {
      Sets the PWM for each thruster pin.
 
      INPUTS
-     int *thrusterSpeeds = Name of the array that stores the processed thruster speeds (0-1023).
+     int *thrusterSpeeds = Pointer to the array that stores the processed thruster speeds (0-1023).
 
      RETURNS
      NONE
   */
   //Serial.println("@Setting Thrusters");
   for (int i = 0; i < THRUSTER_QUANTITY; i++) {
-    thrusters[i].writeMicroseconds(map(thrusterSpeeds[i],1,999,1100,1900));
+    thrusters[i].writeMicroseconds(map(thrusterSpeeds[i], 1, 999, 1100, 1900));
   }
 }
 
@@ -109,10 +140,31 @@ void setActuators(bool * actuatorStates) {
 }
 
 void setCameras() {
+  /*
+    PURPOSE
+    Sets which analogue cameras are to be sent up the tether.
+    NOT YET IMPLEMENTED
+
+    INPUT
+    None
+
+    RETURNS
+    None
+  */
   //Serial.println("Setting Cameras");
 }
 
 void getSensors() {
+  /*
+    PURPOSE
+    Reads all sensors values over I2C and transmits as a comma seperated ASCII string.
+
+    INPUT
+    None
+
+    RETURNS
+    None
+  */
   for (int i = 0 ; i < SENSOR_QUANTITY ; i++) {
     Serial.print(random(0, 100));
     if (i != SENSOR_QUANTITY - 1)
@@ -170,7 +222,18 @@ bool getSerialCommand(int bufferSize, char *receivedData) {
 }
 
 void processCommand(char *receivedData) {
-  // REMOVE BLANK SPACES FROM ARRAY
+  /*
+    PURPOSE
+    Breaks down an ASCII string command to determine the required action, and called the neccessary function.
+
+    INPUT
+    char *receivedData = Name of the array that contains the received data.
+
+    RETURNS
+    None
+  */
+  // REMOVE BLANK SPACES FROM ARRAY (FEATURE NOT IMPLEMENTED)
+
 
   // CHECK IF THE COMMAND IS VALID
   if (receivedData[0] == '?') {
@@ -228,7 +291,7 @@ void processCommand(char *receivedData) {
 
     // MINI-ROV COMMAND
     else if (receivedData[1] == 'M') {
-      //Serial.println("MINI ROV COMMAND");q
+      //Serial.println("MINI ROV COMMAND");
     }
 
     // IDENTITY REQUEST
@@ -246,6 +309,17 @@ void processCommand(char *receivedData) {
 }
 
 void loop() {
+  /*
+    PURPOSE
+    Main execution loop.
+
+    INPUT
+    None
+
+    RETURNS
+    None
+  */
+  
   // DEFINE ARRAY TO STORE RECEIVED DATA IN
   char receivedData[BUFFER_SIZE];
 
